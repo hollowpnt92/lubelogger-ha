@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "LubeLogger Setup",
+        "description": "Enter your LubeLogger instance details",
+        "data": {
+          "url": "URL",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to LubeLogger. Please check your URL and network connection.",
+      "invalid_auth": "Invalid authentication. Please check your username and password.",
+      "unknown": "An unknown error occurred."
+    },
+    "abort": {
+      "already_configured": "This LubeLogger instance is already configured."
+    }
+  }
+}
+

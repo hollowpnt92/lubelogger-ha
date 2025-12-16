@@ -1,0 +1,13 @@
+{
+  "domain": "lubelogger",
+  "name": "LubeLogger",
+  "codeowners": ["@larry"],
+  "config_flow": true,
+  "documentation": "https://github.com/larry/lubelogger-ha",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/larry/lubelogger-ha/issues",
+  "requirements": ["aiohttp>=3.8.0"],
+  "version": "1.0.0"
+}
+
