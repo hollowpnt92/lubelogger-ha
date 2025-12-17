@@ -10,9 +10,11 @@ CONF_UPDATE_INTERVAL: Final = "update_interval"
 
 DEFAULT_UPDATE_INTERVAL: Final = 300  # 5 minutes
 
-# API endpoints (these may need to be adjusted based on actual LubeLogger API)
-API_VEHICLES: Final = "/api/Vehicle/GetAllVehicles"
-API_MAINTENANCE: Final = "/api/MaintenanceRecord/GetAllMaintenanceRecords"
-API_FUEL: Final = "/api/GasRecord/GetAllGasRecords"
-API_STATS: Final = "/api/Vehicle/GetVehicleStatistics"
+# API endpoints
+# The LubeLogger API is rooted at /api and exposes multiple resources such as
+# Odometer, Fuel, ServiceRecord, etc. Full docs are at /api.
+# For now we only ping the root to verify connectivity; detailed endpoints
+# can be wired up later once the desired data model is decided.
+API_ROOT: Final = "/api"
+
 

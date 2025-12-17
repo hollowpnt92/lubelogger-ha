@@ -46,35 +46,11 @@ class LubeLoggerDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from LubeLogger."""
         try:
+            # For now, just verify connectivity and return an empty data structure.
+            # Once specific endpoints are mapped (e.g. Odometer, Fuel), this method
+            # can be extended to fetch and structure real data.
             vehicles = await self.client.async_get_vehicles()
-            data = {"vehicles": vehicles}
-
-            # Fetch additional data for each vehicle
-            for vehicle in vehicles:
-                vehicle_id = vehicle.get("id")
-                if vehicle_id:
-                    try:
-                        # Get statistics for each vehicle
-                        stats = await self.client.async_get_vehicle_statistics(
-                            vehicle_id
-                        )
-                        vehicle["statistics"] = stats
-
-                        # Get recent maintenance records
-                        maintenance = await self.client.async_get_maintenance_records(
-                            vehicle_id
-                        )
-                        vehicle["maintenance"] = maintenance
-
-                        # Get recent fuel records
-                        fuel = await self.client.async_get_fuel_records(vehicle_id)
-                        vehicle["fuel"] = fuel
-                    except Exception as err:
-                        _LOGGER.warning(
-                            "Error fetching data for vehicle %s: %s", vehicle_id, err
-                        )
-
-            return data
+            return {"vehicles": vehicles}
         except Exception as err:
             raise UpdateFailed(f"Error communicating with LubeLogger: {err}") from err
 

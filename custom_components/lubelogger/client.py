@@ -6,15 +6,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import (
-    API_FUEL,
-    API_MAINTENANCE,
-    API_STATS,
-    API_VEHICLES,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
-)
+from .const import API_ROOT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,32 +29,14 @@ class LubeLoggerClient:
         self._auth = aiohttp.BasicAuth(username, password)
 
     async def async_get_vehicles(self) -> list[dict[str, Any]]:
-        """Get all vehicles from LubeLogger."""
-        return await self._async_request(API_VEHICLES)
+        """Ping the API root and return an empty list for now.
 
-    async def async_get_maintenance_records(
-        self, vehicle_id: int | None = None
-    ) -> list[dict[str, Any]]:
-        """Get maintenance records."""
-        url = API_MAINTENANCE
-        if vehicle_id:
-            url = f"{url}?vehicleId={vehicle_id}"
-        return await self._async_request(url)
-
-    async def async_get_fuel_records(
-        self, vehicle_id: int | None = None
-    ) -> list[dict[str, Any]]:
-        """Get fuel records."""
-        url = API_FUEL
-        if vehicle_id:
-            url = f"{url}?vehicleId={vehicle_id}"
-        return await self._async_request(url)
-
-    async def async_get_vehicle_statistics(
-        self, vehicle_id: int
-    ) -> dict[str, Any]:
-        """Get vehicle statistics."""
-        return await self._async_request(f"{API_STATS}?vehicleId={vehicle_id}")
+        The current implementation only verifies that the API is reachable.
+        Once concrete data endpoints (e.g. Odometer, Fuel, etc.) are mapped,
+        this method can be extended to return structured vehicle data.
+        """
+        await self._async_request(API_ROOT)
+        return []
 
     async def _async_request(
         self, endpoint: str, method: str = "GET", **kwargs: Any
