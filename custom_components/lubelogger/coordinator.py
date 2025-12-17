@@ -60,9 +60,17 @@ class LubeLoggerDataUpdateCoordinator(DataUpdateCoordinator):
             if not vehicle_id:
                 continue
 
+            # Build device name from Make, Model, Year
+            make = vehicle.get("Make") or vehicle.get("make") or ""
+            model = vehicle.get("Model") or vehicle.get("model") or ""
+            year = vehicle.get("Year") or vehicle.get("year") or ""
+            
+            name_parts = [part for part in [year, make, model] if part]
+            device_name = " ".join(name_parts) if name_parts else vehicle.get("Name") or vehicle.get("name") or f"Vehicle {vehicle_id}"
+
             vehicle_data = {
                 "id": vehicle_id,
-                "name": vehicle.get("Name") or vehicle.get("name") or f"Vehicle {vehicle_id}",
+                "name": device_name,
                 "vehicle_info": vehicle,
             }
 

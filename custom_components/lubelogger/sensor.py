@@ -66,13 +66,14 @@ async def async_setup_entry(
     for vehicle in vehicles:
         vehicle_id = vehicle.get("id")
         vehicle_name = vehicle.get("name", f"Vehicle {vehicle_id}")
+        vehicle_info = vehicle.get("vehicle_info", {})
 
         sensors.extend(
             [
-                LubeLoggerLatestOdometerSensor(coordinator, vehicle_id, vehicle_name),
-                LubeLoggerNextPlanSensor(coordinator, vehicle_id, vehicle_name),
-                LubeLoggerLatestTaxSensor(coordinator, vehicle_id, vehicle_name),
-                LubeLoggerLatestServiceSensor(coordinator, vehicle_id, vehicle_name),
+                LubeLoggerLatestOdometerSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
+                LubeLoggerNextPlanSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
+                LubeLoggerLatestTaxSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
+                LubeLoggerLatestServiceSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
             ]
         )
 
@@ -87,6 +88,7 @@ class BaseLubeLoggerSensor(CoordinatorEntity, SensorEntity):
         coordinator: LubeLoggerDataUpdateCoordinator,
         vehicle_id: int,
         vehicle_name: str,
+        vehicle_info: dict,
         key: str,
         sensor_name: str,
         unique_id_suffix: str,
@@ -103,11 +105,18 @@ class BaseLubeLoggerSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         self._attr_native_unit_of_measurement = unit
+        
+        # Extract make/model/year from vehicle info for device info
+        make = vehicle_info.get("Make") or vehicle_info.get("make") or ""
+        model = vehicle_info.get("Model") or vehicle_info.get("model") or ""
+        year = str(vehicle_info.get("Year") or vehicle_info.get("year") or "")
+        
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(vehicle_id))},
             name=vehicle_name,
-            manufacturer="LubeLogger",
-            model=vehicle_name,
+            manufacturer=make or "LubeLogger",
+            model=model or vehicle_name,
+            sw_version=year,
         )
 
     @property
@@ -129,11 +138,13 @@ class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
         coordinator: LubeLoggerDataUpdateCoordinator,
         vehicle_id: int,
         vehicle_name: str,
+        vehicle_info: dict,
     ) -> None:
         super().__init__(
             coordinator,
             vehicle_id,
             vehicle_name,
+            vehicle_info,
             key="latest_odometer",
             sensor_name="Latest Odometer",
             unique_id_suffix="latest_odometer",
@@ -168,11 +179,13 @@ class LubeLoggerNextPlanSensor(BaseLubeLoggerSensor):
         coordinator: LubeLoggerDataUpdateCoordinator,
         vehicle_id: int,
         vehicle_name: str,
+        vehicle_info: dict,
     ) -> None:
         super().__init__(
             coordinator,
             vehicle_id,
             vehicle_name,
+            vehicle_info,
             key="next_plan",
             sensor_name="Next Plan",
             unique_id_suffix="next_plan",
@@ -205,11 +218,13 @@ class LubeLoggerLatestTaxSensor(BaseLubeLoggerSensor):
         coordinator: LubeLoggerDataUpdateCoordinator,
         vehicle_id: int,
         vehicle_name: str,
+        vehicle_info: dict,
     ) -> None:
         super().__init__(
             coordinator,
             vehicle_id,
             vehicle_name,
+            vehicle_info,
             key="latest_tax",
             sensor_name="Latest Tax",
             unique_id_suffix="latest_tax",
@@ -244,11 +259,13 @@ class LubeLoggerLatestServiceSensor(BaseLubeLoggerSensor):
         coordinator: LubeLoggerDataUpdateCoordinator,
         vehicle_id: int,
         vehicle_name: str,
+        vehicle_info: dict,
     ) -> None:
         super().__init__(
             coordinator,
             vehicle_id,
             vehicle_name,
+            vehicle_info,
             key="latest_service",
             sensor_name="Latest Service",
             unique_id_suffix="latest_service",

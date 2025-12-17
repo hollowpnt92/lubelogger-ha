@@ -51,16 +51,39 @@ class LubeLoggerClient:
             endpoint = f"{API_ODOMETER}?vehicleId={vehicle_id}"
         records = await self._async_request(endpoint)
         if not isinstance(records, list) or not records:
+            _LOGGER.debug("No odometer records found for vehicle %s", vehicle_id)
             return None
-        # Filter by vehicle if needed, then sort by Id/Date
-        filtered = [r for r in records if not vehicle_id or r.get("VehicleId") == vehicle_id]
-        if not filtered:
-            return None
+        
+        # Filter by vehicle if query param didn't work (check multiple field name variations)
+        if vehicle_id:
+            filtered = [
+                r for r in records
+                if r.get("VehicleId") == vehicle_id
+                or r.get("vehicleId") == vehicle_id
+                or r.get("Vehicle") == vehicle_id
+                or r.get("vehicle") == vehicle_id
+            ]
+            if not filtered:
+                _LOGGER.debug("No odometer records found for vehicle %s after filtering", vehicle_id)
+                return None
+            records = filtered
 
         def sort_key(rec: dict[str, Any]) -> Any:
-            return rec.get("Id") or rec.get("id") or rec.get("Date") or rec.get("date") or 0
+            # Try to sort by Id (numeric) or Date (datetime)
+            rec_id = rec.get("Id") or rec.get("id")
+            rec_date = rec.get("Date") or rec.get("date")
+            if rec_id:
+                try:
+                    return int(rec_id)
+                except (ValueError, TypeError):
+                    return rec_id
+            if rec_date:
+                return rec_date
+            return 0
 
-        return sorted(filtered, key=sort_key)[-1]
+        latest = sorted(records, key=sort_key)[-1]
+        _LOGGER.debug("Latest odometer for vehicle %s: %s", vehicle_id, latest)
+        return latest
 
     async def async_get_next_plan(
         self, vehicle_id: int | None = None
@@ -71,12 +94,35 @@ class LubeLoggerClient:
             endpoint = f"{API_PLAN}?vehicleId={vehicle_id}"
         records = await self._async_request(endpoint)
         if not isinstance(records, list) or not records:
+            _LOGGER.debug("No plan records found for vehicle %s", vehicle_id)
             return None
-        # Filter by vehicle if needed, then get the first (next) one
-        filtered = [r for r in records if not vehicle_id or r.get("VehicleId") == vehicle_id]
-        if not filtered:
-            return None
-        return filtered[0]
+        
+        # Filter by vehicle if query param didn't work
+        if vehicle_id:
+            filtered = [
+                r for r in records
+                if r.get("VehicleId") == vehicle_id
+                or r.get("vehicleId") == vehicle_id
+                or r.get("Vehicle") == vehicle_id
+                or r.get("vehicle") == vehicle_id
+            ]
+            if not filtered:
+                _LOGGER.debug("No plan records found for vehicle %s after filtering", vehicle_id)
+                return None
+            records = filtered
+        
+        # Sort by due date to get the next one
+        def sort_key(rec: dict[str, Any]) -> Any:
+            date_str = rec.get("DueDate") or rec.get("dueDate") or rec.get("Date") or rec.get("date")
+            if date_str:
+                return date_str
+            return ""
+        
+        sorted_records = sorted([r for r in records if sort_key(r)], key=sort_key)
+        if sorted_records:
+            _LOGGER.debug("Next plan for vehicle %s: %s", vehicle_id, sorted_records[0])
+            return sorted_records[0]
+        return None
 
     async def async_get_latest_tax(
         self, vehicle_id: int | None = None
@@ -87,16 +133,38 @@ class LubeLoggerClient:
             endpoint = f"{API_TAX}?vehicleId={vehicle_id}"
         records = await self._async_request(endpoint)
         if not isinstance(records, list) or not records:
+            _LOGGER.debug("No tax records found for vehicle %s", vehicle_id)
             return None
 
-        filtered = [r for r in records if not vehicle_id or r.get("VehicleId") == vehicle_id]
-        if not filtered:
-            return None
+        # Filter by vehicle if query param didn't work
+        if vehicle_id:
+            filtered = [
+                r for r in records
+                if r.get("VehicleId") == vehicle_id
+                or r.get("vehicleId") == vehicle_id
+                or r.get("Vehicle") == vehicle_id
+                or r.get("vehicle") == vehicle_id
+            ]
+            if not filtered:
+                _LOGGER.debug("No tax records found for vehicle %s after filtering", vehicle_id)
+                return None
+            records = filtered
 
         def sort_key(rec: dict[str, Any]) -> Any:
-            return rec.get("Id") or rec.get("id") or rec.get("Date") or rec.get("date") or 0
+            rec_id = rec.get("Id") or rec.get("id")
+            rec_date = rec.get("Date") or rec.get("date")
+            if rec_id:
+                try:
+                    return int(rec_id)
+                except (ValueError, TypeError):
+                    return rec_id
+            if rec_date:
+                return rec_date
+            return 0
 
-        return sorted(filtered, key=sort_key)[-1]
+        latest = sorted(records, key=sort_key)[-1]
+        _LOGGER.debug("Latest tax for vehicle %s: %s", vehicle_id, latest)
+        return latest
 
     async def async_get_latest_service(
         self, vehicle_id: int | None = None
@@ -107,16 +175,38 @@ class LubeLoggerClient:
             endpoint = f"{API_SERVICE_RECORD}?vehicleId={vehicle_id}"
         records = await self._async_request(endpoint)
         if not isinstance(records, list) or not records:
+            _LOGGER.debug("No service records found for vehicle %s", vehicle_id)
             return None
 
-        filtered = [r for r in records if not vehicle_id or r.get("VehicleId") == vehicle_id]
-        if not filtered:
-            return None
+        # Filter by vehicle if query param didn't work
+        if vehicle_id:
+            filtered = [
+                r for r in records
+                if r.get("VehicleId") == vehicle_id
+                or r.get("vehicleId") == vehicle_id
+                or r.get("Vehicle") == vehicle_id
+                or r.get("vehicle") == vehicle_id
+            ]
+            if not filtered:
+                _LOGGER.debug("No service records found for vehicle %s after filtering", vehicle_id)
+                return None
+            records = filtered
 
         def sort_key(rec: dict[str, Any]) -> Any:
-            return rec.get("Id") or rec.get("id") or rec.get("Date") or rec.get("date") or 0
+            rec_id = rec.get("Id") or rec.get("id")
+            rec_date = rec.get("Date") or rec.get("date")
+            if rec_id:
+                try:
+                    return int(rec_id)
+                except (ValueError, TypeError):
+                    return rec_id
+            if rec_date:
+                return rec_date
+            return 0
 
-        return sorted(filtered, key=sort_key)[-1]
+        latest = sorted(records, key=sort_key)[-1]
+        _LOGGER.debug("Latest service for vehicle %s: %s", vehicle_id, latest)
+        return latest
 
     async def _async_request(
         self, endpoint: str, method: str = "GET", **kwargs: Any
