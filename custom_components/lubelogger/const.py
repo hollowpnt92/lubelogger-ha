@@ -17,13 +17,14 @@ API_ROOT: Final = "/api"
 API_VEHICLES: Final = "/api/vehicles"
 
 # Vehicle-scoped endpoints
-API_ODOMETER_ALL: Final = "/api/vehicle/odometerrecords/all"
 API_ODOMETER: Final = "/api/vehicle/odometerrecords"
-API_PLAN_ALL: Final = "/api/vehicle/planrecords/all"
 API_PLAN: Final = "/api/vehicle/planrecords"
-API_TAX_ALL: Final = "/api/vehicle/taxrecords/all"
 API_TAX: Final = "/api/vehicle/taxrecords"
-API_SERVICE_RECORD_ALL: Final = "/api/vehicle/servicerecords/all"
 API_SERVICE_RECORD: Final = "/api/vehicle/servicerecords"
+API_REPAIR_RECORD: Final = "/api/vehicle/repairrecords"
+API_UPGRADE_RECORD: Final = "/api/vehicle/upgraderecords"
+API_SUPPLY_RECORD: Final = "/api/vehicle/supplyrecords"
+API_GAS_RECORD: Final = "/api/vehicle/gasrecords"
+API_REMINDER: Final = "/api/vehicle/reminders"
 
 

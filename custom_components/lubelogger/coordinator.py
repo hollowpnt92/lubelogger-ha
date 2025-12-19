@@ -115,6 +115,59 @@ class LubeLoggerDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 vehicle_data["latest_service"] = None
 
+            # Latest repair record for this vehicle
+            try:
+                vehicle_data["latest_repair"] = await self.client.async_get_latest_repair(
+                    vehicle_id
+                )
+            except Exception as err:
+                _LOGGER.warning(
+                    "Error fetching latest repair for vehicle %s: %s", vehicle_id, err
+                )
+                vehicle_data["latest_repair"] = None
+
+            # Latest upgrade record for this vehicle
+            try:
+                vehicle_data["latest_upgrade"] = await self.client.async_get_latest_upgrade(
+                    vehicle_id
+                )
+            except Exception as err:
+                _LOGGER.warning(
+                    "Error fetching latest upgrade for vehicle %s: %s", vehicle_id, err
+                )
+                vehicle_data["latest_upgrade"] = None
+
+            # Latest supply record for this vehicle
+            try:
+                vehicle_data["latest_supply"] = await self.client.async_get_latest_supply(
+                    vehicle_id
+                )
+            except Exception as err:
+                _LOGGER.warning(
+                    "Error fetching latest supply for vehicle %s: %s", vehicle_id, err
+                )
+                vehicle_data["latest_supply"] = None
+
+            # Latest gas/fuel record for this vehicle
+            try:
+                vehicle_data["latest_gas"] = await self.client.async_get_latest_gas(vehicle_id)
+            except Exception as err:
+                _LOGGER.warning(
+                    "Error fetching latest gas for vehicle %s: %s", vehicle_id, err
+                )
+                vehicle_data["latest_gas"] = None
+
+            # Next reminder for this vehicle
+            try:
+                vehicle_data["next_reminder"] = await self.client.async_get_next_reminder(
+                    vehicle_id
+                )
+            except Exception as err:
+                _LOGGER.warning(
+                    "Error fetching next reminder for vehicle %s: %s", vehicle_id, err
+                )
+                vehicle_data["next_reminder"] = None
+
             data["vehicles"].append(vehicle_data)
 
         return data

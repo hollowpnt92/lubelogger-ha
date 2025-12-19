@@ -78,14 +78,43 @@ async def async_setup_entry(
         vehicle_name = vehicle.get("name", f"Vehicle {vehicle_id}")
         vehicle_info = vehicle.get("vehicle_info", {})
 
-        sensors.extend(
-            [
-                LubeLoggerLatestOdometerSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
-                LubeLoggerNextPlanSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
-                LubeLoggerLatestTaxSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
-                LubeLoggerLatestServiceSensor(coordinator, vehicle_id, vehicle_name, vehicle_info),
-            ]
-        )
+        # Only create sensors if data exists (visible/tabs requirement)
+        if vehicle.get("latest_odometer"):
+            sensors.append(
+                LubeLoggerLatestOdometerSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("next_plan"):
+            sensors.append(
+                LubeLoggerNextPlanSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("latest_tax"):
+            sensors.append(
+                LubeLoggerLatestTaxSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("latest_service"):
+            sensors.append(
+                LubeLoggerLatestServiceSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("latest_repair"):
+            sensors.append(
+                LubeLoggerLatestRepairSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("latest_upgrade"):
+            sensors.append(
+                LubeLoggerLatestUpgradeSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("latest_supply"):
+            sensors.append(
+                LubeLoggerLatestSupplySensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("latest_gas"):
+            sensors.append(
+                LubeLoggerLatestGasSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
+        if vehicle.get("next_reminder"):
+            sensors.append(
+                LubeLoggerNextReminderSensor(coordinator, vehicle_id, vehicle_name, vehicle_info)
+            )
 
     async_add_entities(sensors)
 
@@ -138,6 +167,11 @@ class BaseLubeLoggerSensor(CoordinatorEntity, SensorEntity):
                 rec = vehicle.get(self._key)
                 return rec if isinstance(rec, dict) else None
         return None
+
+    @property
+    def available(self) -> bool:
+        """Return if sensor is available."""
+        return self._record is not None
 
 
 class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
@@ -292,6 +326,197 @@ class LubeLoggerLatestServiceSensor(BaseLubeLoggerSensor):
 
         # API uses lowercase 'date' field
         for field in ("date", "Date", "ServiceDate"):
+            dt = parse_date(rec.get(field))
+            if dt:
+                return dt
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        return self._record or None
+
+
+class LubeLoggerLatestRepairSensor(BaseLubeLoggerSensor):
+    """Sensor for latest repair record."""
+
+    def __init__(
+        self,
+        coordinator: LubeLoggerDataUpdateCoordinator,
+        vehicle_id: int,
+        vehicle_name: str,
+        vehicle_info: dict,
+    ) -> None:
+        super().__init__(
+            coordinator,
+            vehicle_id,
+            vehicle_name,
+            vehicle_info,
+            key="latest_repair",
+            sensor_name="Latest Repair",
+            unique_id_suffix="latest_repair",
+            device_class=SensorDeviceClass.TIMESTAMP,
+        )
+
+    @property
+    def native_value(self) -> datetime | None:
+        rec = self._record
+        if not rec:
+            return None
+
+        for field in ("date", "Date", "RepairDate"):
+            dt = parse_date(rec.get(field))
+            if dt:
+                return dt
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        return self._record or None
+
+
+class LubeLoggerLatestUpgradeSensor(BaseLubeLoggerSensor):
+    """Sensor for latest upgrade record."""
+
+    def __init__(
+        self,
+        coordinator: LubeLoggerDataUpdateCoordinator,
+        vehicle_id: int,
+        vehicle_name: str,
+        vehicle_info: dict,
+    ) -> None:
+        super().__init__(
+            coordinator,
+            vehicle_id,
+            vehicle_name,
+            vehicle_info,
+            key="latest_upgrade",
+            sensor_name="Latest Upgrade",
+            unique_id_suffix="latest_upgrade",
+            device_class=SensorDeviceClass.TIMESTAMP,
+        )
+
+    @property
+    def native_value(self) -> datetime | None:
+        rec = self._record
+        if not rec:
+            return None
+
+        for field in ("date", "Date", "UpgradeDate"):
+            dt = parse_date(rec.get(field))
+            if dt:
+                return dt
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        return self._record or None
+
+
+class LubeLoggerLatestSupplySensor(BaseLubeLoggerSensor):
+    """Sensor for latest supply record."""
+
+    def __init__(
+        self,
+        coordinator: LubeLoggerDataUpdateCoordinator,
+        vehicle_id: int,
+        vehicle_name: str,
+        vehicle_info: dict,
+    ) -> None:
+        super().__init__(
+            coordinator,
+            vehicle_id,
+            vehicle_name,
+            vehicle_info,
+            key="latest_supply",
+            sensor_name="Latest Supply",
+            unique_id_suffix="latest_supply",
+            device_class=SensorDeviceClass.TIMESTAMP,
+        )
+
+    @property
+    def native_value(self) -> datetime | None:
+        rec = self._record
+        if not rec:
+            return None
+
+        for field in ("date", "Date", "SupplyDate"):
+            dt = parse_date(rec.get(field))
+            if dt:
+                return dt
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        return self._record or None
+
+
+class LubeLoggerLatestGasSensor(BaseLubeLoggerSensor):
+    """Sensor for latest gas/fuel record."""
+
+    def __init__(
+        self,
+        coordinator: LubeLoggerDataUpdateCoordinator,
+        vehicle_id: int,
+        vehicle_name: str,
+        vehicle_info: dict,
+    ) -> None:
+        super().__init__(
+            coordinator,
+            vehicle_id,
+            vehicle_name,
+            vehicle_info,
+            key="latest_gas",
+            sensor_name="Latest Fuel Fill",
+            unique_id_suffix="latest_gas",
+            device_class=SensorDeviceClass.TIMESTAMP,
+        )
+
+    @property
+    def native_value(self) -> datetime | None:
+        rec = self._record
+        if not rec:
+            return None
+
+        for field in ("date", "Date", "FuelDate"):
+            dt = parse_date(rec.get(field))
+            if dt:
+                return dt
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        return self._record or None
+
+
+class LubeLoggerNextReminderSensor(BaseLubeLoggerSensor):
+    """Sensor for next reminder."""
+
+    def __init__(
+        self,
+        coordinator: LubeLoggerDataUpdateCoordinator,
+        vehicle_id: int,
+        vehicle_name: str,
+        vehicle_info: dict,
+    ) -> None:
+        super().__init__(
+            coordinator,
+            vehicle_id,
+            vehicle_name,
+            vehicle_info,
+            key="next_reminder",
+            sensor_name="Next Reminder",
+            unique_id_suffix="next_reminder",
+            device_class=SensorDeviceClass.TIMESTAMP,
+        )
+
+    @property
+    def native_value(self) -> datetime | None:
+        rec = self._record
+        if not rec:
+            return None
+
+        # API uses dueDate for reminders
+        for field in ("dueDate", "DueDate", "Date", "date"):
             dt = parse_date(rec.get(field))
             if dt:
                 return dt

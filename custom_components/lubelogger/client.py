@@ -7,11 +7,16 @@ from typing import Any
 import aiohttp
 
 from .const import (
+    API_GAS_RECORD,
     API_ODOMETER,
     API_PLAN,
+    API_REMINDER,
+    API_REPAIR_RECORD,
     API_ROOT,
     API_SERVICE_RECORD,
+    API_SUPPLY_RECORD,
     API_TAX,
+    API_UPGRADE_RECORD,
     API_VEHICLES,
 )
 
@@ -136,6 +141,121 @@ class LubeLoggerClient:
         latest = sorted(records, key=sort_key)[-1]
         _LOGGER.debug("Latest service for vehicle %s: %s", vehicle_id, latest)
         return latest
+
+    async def async_get_latest_repair(
+        self, vehicle_id: int | None = None
+    ) -> dict[str, Any] | None:
+        """Get the latest repair record for a vehicle."""
+        endpoint = f"{API_REPAIR_RECORD}?vehicleId={vehicle_id}" if vehicle_id else API_REPAIR_RECORD
+        records = await self._async_request(endpoint)
+        if not isinstance(records, list) or not records:
+            _LOGGER.debug("No repair records found for vehicle %s", vehicle_id)
+            return None
+
+        def sort_key(rec: dict[str, Any]) -> Any:
+            rec_id = rec.get("id") or rec.get("Id")
+            if rec_id:
+                try:
+                    return int(rec_id)
+                except (ValueError, TypeError):
+                    return rec_id
+            return 0
+
+        latest = sorted(records, key=sort_key)[-1]
+        _LOGGER.debug("Latest repair for vehicle %s: %s", vehicle_id, latest)
+        return latest
+
+    async def async_get_latest_upgrade(
+        self, vehicle_id: int | None = None
+    ) -> dict[str, Any] | None:
+        """Get the latest upgrade record for a vehicle."""
+        endpoint = f"{API_UPGRADE_RECORD}?vehicleId={vehicle_id}" if vehicle_id else API_UPGRADE_RECORD
+        records = await self._async_request(endpoint)
+        if not isinstance(records, list) or not records:
+            _LOGGER.debug("No upgrade records found for vehicle %s", vehicle_id)
+            return None
+
+        def sort_key(rec: dict[str, Any]) -> Any:
+            rec_id = rec.get("id") or rec.get("Id")
+            if rec_id:
+                try:
+                    return int(rec_id)
+                except (ValueError, TypeError):
+                    return rec_id
+            return 0
+
+        latest = sorted(records, key=sort_key)[-1]
+        _LOGGER.debug("Latest upgrade for vehicle %s: %s", vehicle_id, latest)
+        return latest
+
+    async def async_get_latest_supply(
+        self, vehicle_id: int | None = None
+    ) -> dict[str, Any] | None:
+        """Get the latest supply record for a vehicle."""
+        endpoint = f"{API_SUPPLY_RECORD}?vehicleId={vehicle_id}" if vehicle_id else API_SUPPLY_RECORD
+        records = await self._async_request(endpoint)
+        if not isinstance(records, list) or not records:
+            _LOGGER.debug("No supply records found for vehicle %s", vehicle_id)
+            return None
+
+        def sort_key(rec: dict[str, Any]) -> Any:
+            rec_id = rec.get("id") or rec.get("Id")
+            if rec_id:
+                try:
+                    return int(rec_id)
+                except (ValueError, TypeError):
+                    return rec_id
+            return 0
+
+        latest = sorted(records, key=sort_key)[-1]
+        _LOGGER.debug("Latest supply for vehicle %s: %s", vehicle_id, latest)
+        return latest
+
+    async def async_get_latest_gas(
+        self, vehicle_id: int | None = None
+    ) -> dict[str, Any] | None:
+        """Get the latest gas/fuel record for a vehicle."""
+        endpoint = f"{API_GAS_RECORD}?vehicleId={vehicle_id}" if vehicle_id else API_GAS_RECORD
+        records = await self._async_request(endpoint)
+        if not isinstance(records, list) or not records:
+            _LOGGER.debug("No gas records found for vehicle %s", vehicle_id)
+            return None
+
+        def sort_key(rec: dict[str, Any]) -> Any:
+            rec_id = rec.get("id") or rec.get("Id")
+            if rec_id:
+                try:
+                    return int(rec_id)
+                except (ValueError, TypeError):
+                    return rec_id
+            return 0
+
+        latest = sorted(records, key=sort_key)[-1]
+        _LOGGER.debug("Latest gas for vehicle %s: %s", vehicle_id, latest)
+        return latest
+
+    async def async_get_next_reminder(
+        self, vehicle_id: int | None = None
+    ) -> dict[str, Any] | None:
+        """Get the next upcoming reminder for a vehicle."""
+        endpoint = f"{API_REMINDER}?vehicleId={vehicle_id}" if vehicle_id else API_REMINDER
+        records = await self._async_request(endpoint)
+        if not isinstance(records, list) or not records:
+            _LOGGER.debug("No reminders found for vehicle %s", vehicle_id)
+            return None
+
+        # Sort by dueDate to get the next one
+        def sort_key(rec: dict[str, Any]) -> Any:
+            date_str = rec.get("dueDate") or rec.get("DueDate") or rec.get("Date") or rec.get("date")
+            if date_str:
+                return date_str
+            return ""
+
+        sorted_records = sorted([r for r in records if sort_key(r)], key=sort_key)
+        if sorted_records:
+            _LOGGER.debug("Next reminder for vehicle %s: %s", vehicle_id, sorted_records[0])
+            return sorted_records[0]
+        return None
 
     async def _async_request(
         self, endpoint: str, method: str = "GET", **kwargs: Any
