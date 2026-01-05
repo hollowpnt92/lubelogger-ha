@@ -194,7 +194,7 @@ class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
             unique_id_suffix="latest_odometer",
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
-            unit="km",
+            unit="mi",
         )
 
     @property
@@ -202,13 +202,21 @@ class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
         rec = self._record
         if not rec:
             return None
-        # API returns lowercase 'odometer' field
-        odometer = rec.get("odometer") or rec.get("Odometer")
+        # Adjusted odometer endpoint returns the value directly
+        if rec.get("adjusted"):
+            odometer = rec.get("odometer")
+        else:
+            # API returns lowercase 'odometer' field from records
+            odometer = rec.get("odometer") or rec.get("Odometer")
+        
         if odometer:
             try:
                 return int(odometer)
             except (ValueError, TypeError):
-                return odometer
+                try:
+                    return float(odometer)
+                except (ValueError, TypeError):
+                    return odometer
         return None
 
     @property

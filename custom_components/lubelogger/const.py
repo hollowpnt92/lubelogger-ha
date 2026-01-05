@@ -18,6 +18,7 @@ API_VEHICLES: Final = "/api/vehicles"
 
 # Vehicle-scoped endpoints
 API_ODOMETER: Final = "/api/vehicle/odometerrecords"
+API_ADJUSTED_ODOMETER: Final = "/api/vehicle/adjustedodometer"
 API_PLAN: Final = "/api/vehicle/planrecords"
 API_TAX: Final = "/api/vehicle/taxrecords"
 API_SERVICE_RECORD: Final = "/api/vehicle/servicerecords"

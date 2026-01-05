@@ -7,6 +7,7 @@ from typing import Any
 import aiohttp
 
 from .const import (
+    API_ADJUSTED_ODOMETER,
     API_GAS_RECORD,
     API_ODOMETER,
     API_PLAN,
@@ -51,6 +52,19 @@ class LubeLoggerClient:
         self, vehicle_id: int | None = None
     ) -> dict[str, Any] | None:
         """Get the latest odometer record for a vehicle."""
+        # Try adjusted odometer first (includes adjustments and correct value)
+        if vehicle_id:
+            try:
+                endpoint = f"{API_ADJUSTED_ODOMETER}?vehicleId={vehicle_id}"
+                adjusted = await self._async_request(endpoint)
+                if adjusted and isinstance(adjusted, dict):
+                    # Adjusted odometer returns a single value, wrap it in a record-like dict
+                    _LOGGER.debug("Using adjusted odometer for vehicle %s: %s", vehicle_id, adjusted)
+                    return {"odometer": adjusted, "adjusted": True}
+            except Exception as err:
+                _LOGGER.debug("Adjusted odometer not available for vehicle %s: %s", vehicle_id, err)
+        
+        # Fall back to latest odometer record
         endpoint = f"{API_ODOMETER}?vehicleId={vehicle_id}" if vehicle_id else API_ODOMETER
         records = await self._async_request(endpoint)
         if not isinstance(records, list) or not records:
