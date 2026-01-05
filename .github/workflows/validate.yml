@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate:
+  hassfest:
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v4"
@@ -14,4 +14,12 @@ jobs:
       - uses: "hacs/action@main"
         with:
           category: "integration"
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
 
