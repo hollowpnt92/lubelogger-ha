@@ -37,7 +37,7 @@ def parse_date(date_str: str | None) -> datetime | None:
     except (ValueError, AttributeError):
         pass
 
-    # FORMATO EUROPEO PRINCIPALE per server italiano
+    # US and EU date e time format
     formats = [
         "%d/%m/%Y",           # EU format: "28/02/2027"
         "%d/%m/%Y %H:%M:%S",  # EU format with time
