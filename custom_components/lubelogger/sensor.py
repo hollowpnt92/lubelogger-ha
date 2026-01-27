@@ -378,7 +378,7 @@ class LubeLoggerNextPlanSensor(BaseLubeLoggerSensor):
         
         # Convert any numbers in European format
         if attrs and "cost" in attrs:
-            attrs["cost"] = convert_number_string(attrs["cost"])  # <-- MODIFICATO QUI
+            attrs["cost"] = convert_number_string(attrs["cost"])
         
         # Add the date in a readable format
         date_fields = ["dateCreated", "dateModified", "Date", "date"]
@@ -426,7 +426,7 @@ class LubeLoggerLatestTaxSensor(BaseLubeLoggerSensor):
         
         cost = rec.get("cost") or rec.get("Cost")
         if cost:
-            return convert_number_string(cost)  # <-- MODIFICATO QUI
+            return convert_number_string(cost) 
         return None
 
     @property
@@ -489,7 +489,7 @@ class LubeLoggerLatestServiceSensor(BaseLubeLoggerSensor):
         cost_fields = ["cost", "Cost", "totalCost", "laborCost", "partsCost"]
         for field in cost_fields:
             if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  # <-- MODIFICATO QUI
+                attrs[field] = convert_number_string(attrs[field])  
         
         # Add date in readable format
         date_fields = ["date", "Date", "ServiceDate"]
@@ -547,7 +547,7 @@ class LubeLoggerLatestRepairSensor(BaseLubeLoggerSensor):
         cost_fields = ["cost", "Cost", "totalCost", "laborCost", "partsCost"]
         for field in cost_fields:
             if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  # <-- MODIFICATO QUI
+                attrs[field] = convert_number_string(attrs[field])  
         
         # Add date in readable format
         date_fields = ["date", "Date", "RepairDate"]
@@ -605,7 +605,7 @@ class LubeLoggerLatestUpgradeSensor(BaseLubeLoggerSensor):
         cost_fields = ["cost", "Cost", "totalCost"]
         for field in cost_fields:
             if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  # <-- MODIFICATO QUI
+                attrs[field] = convert_number_string(attrs[field])  
         
         # Add date in readable format
         date_fields = ["date", "Date", "UpgradeDate"]
@@ -663,7 +663,7 @@ class LubeLoggerLatestSupplySensor(BaseLubeLoggerSensor):
         cost_fields = ["cost", "Cost", "totalCost", "price"]
         for field in cost_fields:
             if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  # <-- MODIFICATO QUI
+                attrs[field] = convert_number_string(attrs[field])  
         
         # Add date in readable format
         date_fields = ["date", "Date", "SupplyDate"]
@@ -721,7 +721,7 @@ class LubeLoggerLatestGasSensor(BaseLubeLoggerSensor):
         numeric_fields = ["cost", "Cost", "price", "quantity", "odometer", "totalCost", "fuelConsumed"]
         for field in numeric_fields:
             if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  # <-- MODIFICATO QUI
+                attrs[field] = convert_number_string(attrs[field])  
         
         # FUEL CONSUMPTION - EXPLICIT CONVERSION for fuelEconomy
         if "fuelEconomy" in attrs:
@@ -822,7 +822,7 @@ class LubeLoggerNextReminderSensor(BaseLubeLoggerSensor):
         distance_fields = ["dueDistance", "dueOdometer", "distance"]
         for field in distance_fields:
             if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  # <-- MODIFICATO QUI
+                attrs[field] = convert_number_string(attrs[field])  
         
         # Add due date in readable format
         if "dueDate" in attrs:
