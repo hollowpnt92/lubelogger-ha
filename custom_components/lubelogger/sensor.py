@@ -320,15 +320,25 @@ class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
             odometer = rec.get("odometer") or rec.get("Odometer")
         
         if odometer:
-            return convert_number_string(odometer)  # <-- MODIFICATO QUI
+            return convert_number_string(odometer)
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
+        
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add the date in a readable format
-        if attrs and "date" in attrs:
+        if "date" in attrs:
             try:
                 dt = parse_date(attrs["date"])
                 if dt:
@@ -336,7 +346,7 @@ class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
             except (ValueError, TypeError):
                 pass
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerNextPlanSensor(BaseLubeLoggerSensor):
@@ -374,11 +384,17 @@ class LubeLoggerNextPlanSensor(BaseLubeLoggerSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
         
-        # Convert any numbers in European format
-        if attrs and "cost" in attrs:
-            attrs["cost"] = convert_number_string(attrs["cost"])
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add the date in a readable format
         date_fields = ["dateCreated", "dateModified", "Date", "date"]
@@ -392,7 +408,7 @@ class LubeLoggerNextPlanSensor(BaseLubeLoggerSensor):
                     pass
                 break
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerLatestTaxSensor(BaseLubeLoggerSensor):
@@ -426,12 +442,22 @@ class LubeLoggerLatestTaxSensor(BaseLubeLoggerSensor):
         
         cost = rec.get("cost") or rec.get("Cost")
         if cost:
-            return convert_number_string(cost) 
+            return convert_number_string(cost)
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
+        
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add date in readable format
         date_fields = ["date", "Date", "taxDate"]
@@ -445,7 +471,7 @@ class LubeLoggerLatestTaxSensor(BaseLubeLoggerSensor):
                     pass
                 break
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerLatestServiceSensor(BaseLubeLoggerSensor):
@@ -483,13 +509,17 @@ class LubeLoggerLatestServiceSensor(BaseLubeLoggerSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
         
-        # Convert any costs in European format
-        cost_fields = ["cost", "Cost", "totalCost", "laborCost", "partsCost"]
-        for field in cost_fields:
-            if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add date in readable format
         date_fields = ["date", "Date", "ServiceDate"]
@@ -503,7 +533,7 @@ class LubeLoggerLatestServiceSensor(BaseLubeLoggerSensor):
                     pass
                 break
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerLatestRepairSensor(BaseLubeLoggerSensor):
@@ -541,13 +571,17 @@ class LubeLoggerLatestRepairSensor(BaseLubeLoggerSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
         
-        # Convert any costs in European format
-        cost_fields = ["cost", "Cost", "totalCost", "laborCost", "partsCost"]
-        for field in cost_fields:
-            if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add date in readable format
         date_fields = ["date", "Date", "RepairDate"]
@@ -561,7 +595,7 @@ class LubeLoggerLatestRepairSensor(BaseLubeLoggerSensor):
                     pass
                 break
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerLatestUpgradeSensor(BaseLubeLoggerSensor):
@@ -599,13 +633,17 @@ class LubeLoggerLatestUpgradeSensor(BaseLubeLoggerSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
         
-        # Convert any costs in European format
-        cost_fields = ["cost", "Cost", "totalCost"]
-        for field in cost_fields:
-            if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add date in readable format
         date_fields = ["date", "Date", "UpgradeDate"]
@@ -619,7 +657,7 @@ class LubeLoggerLatestUpgradeSensor(BaseLubeLoggerSensor):
                     pass
                 break
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerLatestSupplySensor(BaseLubeLoggerSensor):
@@ -657,13 +695,17 @@ class LubeLoggerLatestSupplySensor(BaseLubeLoggerSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
         
-        # Convert any costs in European format
-        cost_fields = ["cost", "Cost", "totalCost", "price"]
-        for field in cost_fields:
-            if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add date in readable format
         date_fields = ["date", "Date", "SupplyDate"]
@@ -677,7 +719,7 @@ class LubeLoggerLatestSupplySensor(BaseLubeLoggerSensor):
                     pass
                 break
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerLatestGasSensor(BaseLubeLoggerSensor):
@@ -715,13 +757,17 @@ class LubeLoggerLatestGasSensor(BaseLubeLoggerSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
         
-        # Convert all numbers in European format
-        numeric_fields = ["cost", "Cost", "price", "quantity", "odometer", "totalCost", "fuelConsumed"]
-        for field in numeric_fields:
-            if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # FUEL CONSUMPTION - EXPLICIT CONVERSION for fuelEconomy
         if "fuelEconomy" in attrs:
@@ -738,7 +784,6 @@ class LubeLoggerLatestGasSensor(BaseLubeLoggerSensor):
             # If it's a number, convert to km/l and round
             if isinstance(fuel_value, (int, float)) and fuel_value > 0:
                 # Conversion l/100km → km/l (100 / consumption)
-                # Typical consumption: 5.46 l/100km → 100/5.46 ≈ 18.32 km/l
                 fuel_value = 100 / fuel_value
                 fuel_value = round(fuel_value, 2)  # Round to 2 decimals
             
@@ -777,7 +822,7 @@ class LubeLoggerLatestGasSensor(BaseLubeLoggerSensor):
                     pass
                 break
         
-        return attrs or None
+        return attrs
 
 
 class LubeLoggerNextReminderSensor(BaseLubeLoggerSensor):
@@ -816,13 +861,17 @@ class LubeLoggerNextReminderSensor(BaseLubeLoggerSensor):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        attrs = self._record.copy() if self._record else {}
+        if not self._record:
+            return None
         
-        # Convert distances in European format
-        distance_fields = ["dueDistance", "dueOdometer", "distance"]
-        for field in distance_fields:
-            if field in attrs:
-                attrs[field] = convert_number_string(attrs[field])  
+        attrs = {}
+        # Process ALL fields in the record to make them interoperable
+        for key, value in self._record.items():
+            # Convert any value that looks like a number
+            if isinstance(value, str) and any(char.isdigit() for char in value):
+                attrs[key] = convert_number_string(value)
+            else:
+                attrs[key] = value
         
         # Add due date in readable format
         if "dueDate" in attrs:
@@ -874,4 +923,4 @@ class LubeLoggerNextReminderSensor(BaseLubeLoggerSensor):
         else:
             attrs["reminder_type"] = "Mixed"
         
-        return attrs or None
+        return attrs
