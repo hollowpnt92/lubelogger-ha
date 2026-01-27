@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any
 
 import aiohttp
@@ -13,7 +14,6 @@ from .const import (
     API_PLAN,
     API_REMINDER,
     API_REPAIR_RECORD,
-    API_ROOT,
     API_SERVICE_RECORD,
     API_SUPPLY_RECORD,
     API_TAX,
@@ -22,6 +22,81 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def parse_date_string(date_str: str) -> datetime | None:
+    """Parse a date string in multiple formats and return datetime.
+    
+    PRIMA i formati europei (DD/MM/YYYY), POI quelli americani.
+    """
+    if not date_str:
+        return None
+    
+    # FORMATI EUROPEO PRIMA
+    formats = [
+        "%d/%m/%Y",           # European format: "28/02/2027"
+        "%d/%m/%Y %H:%M:%S",  # European with time
+        "%m/%d/%Y",           # US format: "12/17/2025"
+        "%m/%d/%Y %H:%M:%S",  # US with time
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+    ]
+    
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    
+    return None
+
+
+def get_reminder_priority(reminder: dict[str, Any]) -> tuple:
+    """Calculate priority for reminder sorting.
+    
+    Returns a tuple for sorting:
+    (is_overdue, distance_priority, date_priority, description)
+    
+    Lower values = higher priority.
+    """
+    # Priority 1: PastDue urgency
+    is_past_due = reminder.get("urgency") == "PastDue"
+    
+    # Priority 2: Negative distances (overdue by km)
+    due_distance = reminder.get("dueDistance")
+    try:
+        distance = float(due_distance) if due_distance not in [None, ""] else 0
+    except (ValueError, TypeError):
+        distance = 0
+    
+    # Priority 3: Negative days (overdue by time)
+    due_days = reminder.get("dueDays")
+    try:
+        days = int(due_days) if due_days not in [None, ""] else 0
+    except (ValueError, TypeError):
+        days = 0
+    
+    # Create priority tuple:
+    # 1. Non-overdue first (False < True in sorting, so we invert)
+    # 2. Most negative distance first (smaller = higher priority)
+    # 3. Most negative days first (smaller = higher priority)
+    # 4. Alphabetical description as tiebreaker
+    
+    # Invert is_past_due so False (not past due) sorts before True (past due)
+    overdue_priority = not is_past_due
+    
+    # For distance: negative values (overdue) should come first
+    # More negative = smaller number = higher priority
+    distance_priority = -distance if distance < 0 else float('inf')
+    
+    # For days: same logic
+    days_priority = -days if days < 0 else float('inf')
+    
+    description = reminder.get("description", "")
+    
+    return (overdue_priority, distance_priority, days_priority, description)
 
 
 class LubeLoggerClient:
@@ -52,19 +127,16 @@ class LubeLoggerClient:
         self, vehicle_id: int | None = None
     ) -> dict[str, Any] | None:
         """Get the latest odometer record for a vehicle."""
-        # Try adjusted odometer first (includes adjustments and correct value)
         if vehicle_id:
             try:
                 endpoint = f"{API_ADJUSTED_ODOMETER}?vehicleId={vehicle_id}"
                 adjusted = await self._async_request(endpoint)
                 if adjusted and isinstance(adjusted, dict):
-                    # Adjusted odometer returns a single value, wrap it in a record-like dict
                     _LOGGER.debug("Using adjusted odometer for vehicle %s: %s", vehicle_id, adjusted)
                     return {"odometer": adjusted, "adjusted": True}
             except Exception as err:
                 _LOGGER.debug("Adjusted odometer not available for vehicle %s: %s", vehicle_id, err)
         
-        # Fall back to latest odometer record
         endpoint = f"{API_ODOMETER}?vehicleId={vehicle_id}" if vehicle_id else API_ODOMETER
         records = await self._async_request(endpoint)
         if not isinstance(records, list) or not records:
@@ -72,7 +144,6 @@ class LubeLoggerClient:
             return None
 
         def sort_key(rec: dict[str, Any]) -> Any:
-            # Sort by id (numeric) - higher id = more recent
             rec_id = rec.get("id") or rec.get("Id")
             if rec_id:
                 try:
@@ -95,14 +166,15 @@ class LubeLoggerClient:
             _LOGGER.debug("No plan records found for vehicle %s", vehicle_id)
             return None
         
-        # Sort by dateCreated to get the most recent/next one
         def sort_key(rec: dict[str, Any]) -> Any:
             date_str = rec.get("dateCreated") or rec.get("dateModified") or rec.get("Date") or rec.get("date")
             if date_str:
-                return date_str
-            return ""
+                dt = parse_date_string(date_str)
+                if dt:
+                    return dt
+            return datetime.max
         
-        sorted_records = sorted([r for r in records if sort_key(r)], key=sort_key)
+        sorted_records = sorted([r for r in records if sort_key(r) != datetime.max], key=sort_key)
         if sorted_records:
             _LOGGER.debug("Next plan for vehicle %s: %s", vehicle_id, sorted_records[0])
             return sorted_records[0]
@@ -119,7 +191,6 @@ class LubeLoggerClient:
             return None
 
         def sort_key(rec: dict[str, Any]) -> Any:
-            # Sort by id (numeric) - higher id = more recent
             rec_id = rec.get("id") or rec.get("Id")
             if rec_id:
                 try:
@@ -143,7 +214,6 @@ class LubeLoggerClient:
             return None
 
         def sort_key(rec: dict[str, Any]) -> Any:
-            # Sort by id (numeric) - higher id = more recent
             rec_id = rec.get("id") or rec.get("Id")
             if rec_id:
                 try:
@@ -258,17 +328,13 @@ class LubeLoggerClient:
             _LOGGER.debug("No reminders found for vehicle %s", vehicle_id)
             return None
 
-        # Sort by dueDate to get the next one
-        def sort_key(rec: dict[str, Any]) -> Any:
-            date_str = rec.get("dueDate") or rec.get("DueDate") or rec.get("Date") or rec.get("date")
-            if date_str:
-                return date_str
-            return ""
-
-        sorted_records = sorted([r for r in records if sort_key(r)], key=sort_key)
+        # Ordina i promemoria per priorità (quelli scaduti prima)
+        sorted_records = sorted(records, key=get_reminder_priority)
+        
         if sorted_records:
-            _LOGGER.debug("Next reminder for vehicle %s: %s", vehicle_id, sorted_records[0])
-            return sorted_records[0]
+            next_reminder = sorted_records[0]
+            _LOGGER.debug("Next reminder for vehicle %s: %s", vehicle_id, next_reminder)
+            return next_reminder
         return None
 
     async def _async_request(
@@ -287,7 +353,6 @@ class LubeLoggerClient:
                 **kwargs,
             ) as response:
                 if response.status == 404:
-                    # Endpoint not found; log as debug and return empty result
                     _LOGGER.debug("Endpoint not found: %s", url)
                     return []
                 response.raise_for_status()
@@ -300,4 +365,3 @@ class LubeLoggerClient:
         finally:
             if not self._session:
                 await session.close()
-
