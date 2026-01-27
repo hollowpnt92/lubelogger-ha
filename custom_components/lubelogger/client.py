@@ -6,8 +6,10 @@ from datetime import datetime
 from typing import Any
 
 import aiohttp
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    API_ROOT,  # Added back as requested
     API_ADJUSTED_ODOMETER,
     API_GAS_RECORD,
     API_ODOMETER,
@@ -25,14 +27,27 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def parse_date_string(date_str: str) -> datetime | None:
-    """Parse a date string in multiple formats and return datetime.
+    """Parse a date string in multiple formats and return timezone-aware datetime.
     
-    PRIMA i formati europei (DD/MM/YYYY), POI quelli americani.
+    Tries European formats (DD/MM/YYYY) first, then US formats.
+    All returned datetime objects are timezone-aware (required by Home Assistant).
     """
     if not date_str:
         return None
-    
-    # FORMATI EUROPEO PRIMA
+
+    # Try ISO format first (handles timezone-aware strings)
+    try:
+        if date_str.endswith("Z"):
+            date_str = date_str.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(date_str)
+        # Ensure timezone-aware - use UTC if no timezone info
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=dt_util.UTC)
+        return dt
+    except (ValueError, AttributeError):
+        pass
+
+    # European formats first, then US formats
     formats = [
         "%d/%m/%Y",           # European format: "28/02/2027"
         "%d/%m/%Y %H:%M:%S",  # European with time
@@ -43,13 +58,17 @@ def parse_date_string(date_str: str) -> datetime | None:
         "%Y-%m-%d %H:%M:%S",
         "%Y-%m-%d",
     ]
-    
+
     for fmt in formats:
         try:
-            return datetime.strptime(date_str, fmt)
-        except ValueError:
+            dt = datetime.strptime(date_str, fmt)
+            # Make timezone-aware (assume local timezone, then convert to UTC)
+            if dt.tzinfo is None:
+                dt = dt_util.as_local(dt)
+            return dt
+        except (ValueError, AttributeError):
             continue
-    
+
     return None
 
 
@@ -328,7 +347,7 @@ class LubeLoggerClient:
             _LOGGER.debug("No reminders found for vehicle %s", vehicle_id)
             return None
 
-        # Ordina i promemoria per priorità (quelli scaduti prima)
+        # Sort reminders by priority (overdue ones first)
         sorted_records = sorted(records, key=get_reminder_priority)
         
         if sorted_records:
