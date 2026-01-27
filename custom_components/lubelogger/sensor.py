@@ -71,25 +71,25 @@ def convert_european_number(number_str: Any) -> float | int | str:
         return number_str
     
     if isinstance(number_str, str):
-        # Rimuovi eventuali simboli di valuta
+       
         number_str = number_str.replace('€', '').replace('$', '').replace('£', '').strip()
         
-        # Gestione formato europeo: punto = separatore migliaia, virgola = decimale
+        # "European format: dot as thousands separator, comma as decimal separator."
         if ',' in number_str and '.' in number_str:
-            # Formato: 1.234,56 → rimuovi punti, sostituisci virgola
+            # Format: 1.234,56 → remove dots, replace comma
             number_str = number_str.replace('.', '').replace(',', '.')
         elif ',' in number_str:
-            # Formato: 1234,56 → sostituisci virgola
+            # Format: 1234,56 → replace comma
             number_str = number_str.replace(',', '.')
-        # Se ci sono solo punti, potrebbero essere decimali US o migliaia EU
+        # If there are only dots, they could be US decimals or EU thousands.
         elif '.' in number_str and len(number_str.split('.')[-1]) == 3:
-            # Probabile formato: 1.234 → rimuovi punto
+            # Likely format: 1.234 → remove dot
             number_str = number_str.replace('.', '')
         
         try:
-            # Prova come float
+            # Try as float
             result = float(number_str)
-            # Se è un intero senza decimali, restituisci int
+            # If it's an integer without decimals, return int
             if result.is_integer():
                 return int(result)
             return result
@@ -104,28 +104,28 @@ def convert_fuel_consumption(value: Any) -> float | str:
     if value is None or value == "":
         return None
     
-    # Se è già un numero
+    # If it's already a number
     if isinstance(value, (int, float)):
         num_value = float(value)
-    # Se è una stringa, converti formato europeo
+    # If it's a string, convert European format
     elif isinstance(value, str):
-        # Sostituisci virgola con punto per formato europeo
+        # Replace comma with dot for European format
         value_clean = value.replace(',', '.')
         try:
             num_value = float(value_clean)
         except (ValueError, TypeError):
-            # Se non può essere convertito, restituisci la stringa originale
+            # If it cannot be converted, return the original string
             return value
     else:
         return value
     
-    # Conversione l/100km → km/l
-    # Consumi realistici: l/100km sono tipicamente tra 3 e 20
-    # km/l sono tipicamente tra 5 e 33
-    if 2 < num_value < 30:  # Probabilmente è l/100km
+    # Conversion l/100km → km/l
+    # Realistic consumption: l/100km are typically between 3 and 20
+    # km/l are typically between 5 and 33
+    if 2 < num_value < 30:  # Likely l/100km
         num_value = 100 / num_value
     
-    # Arrotonda a 2 decimali
+    # Round to 2 decimal places
     return round(num_value, 2)
 
 
@@ -259,7 +259,7 @@ class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
             vehicle_name,
             vehicle_info,
             key="latest_odometer",
-            sensor_name="Ultimo Odometro",
+            sensor_name="Latest Odometer",
             unique_id_suffix="latest_odometer",
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -285,12 +285,12 @@ class LubeLoggerLatestOdometerSensor(BaseLubeLoggerSensor):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         attrs = self._record.copy() if self._record else {}
         
-        # Aggiungi la data in formato leggibile
+        # Add the date in a readable format
         if attrs and "date" in attrs:
             try:
                 dt = parse_date(attrs["date"])
                 if dt:
-                    attrs["data_formattata"] = dt.strftime("%d/%m/%Y")
+                    attrs["data_formatted"] = dt.strftime("%d/%m/%Y")
             except (ValueError, TypeError):
                 pass
         
@@ -313,7 +313,7 @@ class LubeLoggerNextPlanSensor(BaseLubeLoggerSensor):
             vehicle_name,
             vehicle_info,
             key="next_plan",
-            sensor_name="Prossimo Piano",
+            sensor_name="Next Plan",
             unique_id_suffix="next_plan",
             device_class=SensorDeviceClass.TIMESTAMP,
         )
@@ -334,18 +334,18 @@ class LubeLoggerNextPlanSensor(BaseLubeLoggerSensor):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         attrs = self._record.copy() if self._record else {}
         
-        # Converti eventuali numeri nel formato europeo
+        # Convert any numbers in European format
         if attrs and "cost" in attrs:
             attrs["cost"] = convert_european_number(attrs["cost"])
         
-        # Aggiungi la data in formato leggibile
+        # Add the date in a readable format
         date_fields = ["dateCreated", "dateModified", "Date", "date"]
         for field in date_fields:
             if field in attrs:
                 try:
                     dt = parse_date(attrs[field])
                     if dt:
-                        attrs[f"{field}_formattata"] = dt.strftime("%d/%m/%Y")
+                        attrs[f"{field}_formatted"] = dt.strftime("%d/%m/%Y")
                 except (ValueError, TypeError):
                     pass
                 break
@@ -369,7 +369,7 @@ class LubeLoggerLatestTaxSensor(BaseLubeLoggerSensor):
             vehicle_name,
             vehicle_info,
             key="latest_tax",
-            sensor_name="Ultima Tassa",
+            sensor_name="Latest Tax",
             unique_id_suffix="latest_tax",
             device_class=SensorDeviceClass.MONETARY,
             state_class=None,
