@@ -1,0 +1,37 @@
+{
+  "title": "LubeLogger",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configura LubeLogger",
+        "description": "Inserisci le credenziali dell'API",
+        "data": {
+          "url": "URL dell'API",
+          "username": "Nome utente",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connessione fallita",
+      "invalid_auth": "Autenticazione non valida",
+      "unknown": "Errore imprevisto"
+    },
+    "abort": {
+      "already_configured": "Già configurato"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_odometer": { "name": "Ultimo contachilometri" },
+      "latest_service": { "name": "Ultimo servizio" },
+      "latest_repair": { "name": "Ultima riparazione" },
+      "latest_upgrade": { "name": "Ultimo upgrade" },
+      "latest_supply": { "name": "Ultima fornitura" },
+      "latest_gas": { "name": "Ultimo rifornimento" },
+      "latest_tax": { "name": "Ultima tassa" },
+      "next_plan": { "name": "Prossimo piano" },
+      "next_reminder": { "name": "Prossimo promemoria" }
+    }
+  }
+}

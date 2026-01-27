@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "latest_odometer": { "name": "Latest Odometer" },
+      "latest_service": { "name": "Last Service" },
+      "latest_repair": { "name": "Last Repair" },
+      "latest_upgrade": { "name": "Last Upgrade" },
+      "latest_supply": { "name": "Last Supply" },
+      "latest_gas": { "name": "Last Refuel" },
+      "latest_tax": { "name": "Latest Tax" },
+      "next_plan": { "name": "Next Plan" },
+      "next_reminder": { "name": "Next Reminder" }
+    }
+  }
+}
